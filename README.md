@@ -123,6 +123,19 @@ export CASTLE_ARGOCD_TOKEN="your-argocd-token"
 ./bin/castle deploy --app payments --env prod --repo https://github.com/org/gitops.git --sync
 ```
 
+### Interactive Demo
+
+`scripts/demo.sh` walks through the full `init → scan → deploy` flow in a single script — no backend infrastructure required (no ArgoCD, DefectDojo, or Kubernetes cluster). Each step runs inside an isolated `mktemp` directory under `/tmp` that is automatically deleted on exit, so nothing is written to your repository.
+
+> If `./bin/castle` does not exist yet, the script calls `make build` automatically before starting.
+
+```bash
+chmod +x scripts/demo.sh
+./scripts/demo.sh
+```
+
+The script pauses between steps so you can inspect each output at your own pace. It detects whether Trivy is available in `$PATH` and explains the stub-fallback mode if it is not, making it safe to run on any machine.
+
 ---
 
 ## Command reference
