@@ -41,3 +41,15 @@ kubernetes:
   # Leave empty to use the in-cluster service-account config or the default
   # kubeconfig at $HOME/.kube/config.
   kubeconfig: ""
+
+# ---------------------------------------------------------------------------
+# ArgoCD integration (used by castle deploy --sync)
+# ---------------------------------------------------------------------------
+argocd:
+  # Base URL of your ArgoCD API server (no trailing slash).
+  url: https://argocd.example.com
+
+  # ArgoCD API token with sufficient permissions to trigger application syncs.
+  # Generate one in ArgoCD under Settings → Accounts → Generate Token, or use
+  # a project-scoped token. Prefer CASTLE_ARGOCD_TOKEN env var over this file.
+  token: ""

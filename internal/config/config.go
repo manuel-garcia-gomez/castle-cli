@@ -12,10 +12,11 @@ import (
 
 // Config holds the full castle-cli configuration.
 type Config struct {
-	Environment string          `mapstructure:"environment"`
-	Port        int             `mapstructure:"port"`
+	Environment string           `mapstructure:"environment"`
+	Port        int              `mapstructure:"port"`
 	DefectDojo  DefectDojoConfig `mapstructure:"defectdojo"`
 	Kubernetes  KubernetesConfig `mapstructure:"kubernetes"`
+	ArgoCD      ArgoCDConfig     `mapstructure:"argocd"`
 }
 
 // DefectDojoConfig holds DefectDojo API connection settings.
@@ -28,6 +29,15 @@ type DefectDojoConfig struct {
 type KubernetesConfig struct {
 	Namespace  string `mapstructure:"namespace"`
 	Kubeconfig string `mapstructure:"kubeconfig"`
+}
+
+// ArgoCDConfig holds ArgoCD API connection settings used by castle deploy.
+type ArgoCDConfig struct {
+	// URL is the base URL of the ArgoCD API server, e.g. https://argocd.example.com.
+	URL string `mapstructure:"url"`
+	// Token is an ArgoCD API token with sufficient permissions to trigger syncs.
+	// Prefer setting CASTLE_ARGOCD_TOKEN in the environment over storing it here.
+	Token string `mapstructure:"token"`
 }
 
 // Load reads configuration from cfgFile (if non-empty) or searches for
@@ -51,7 +61,7 @@ func Load(cfgFile string) (Config, error) {
 		v.SetConfigType("yaml")
 	}
 
-	// CASTLE_PORT, CASTLE_DEFECTDOJO_API_KEY, CASTLE_KUBERNETES_NAMESPACE, …
+	// CASTLE_PORT, CASTLE_DEFECTDOJO_API_KEY, CASTLE_ARGOCD_TOKEN, …
 	v.SetEnvPrefix("CASTLE")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
@@ -83,4 +93,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("defectdojo.api_key", "")
 	v.SetDefault("kubernetes.namespace", "default")
 	v.SetDefault("kubernetes.kubeconfig", "")
+	v.SetDefault("argocd.url", "")
+	v.SetDefault("argocd.token", "")
 }
