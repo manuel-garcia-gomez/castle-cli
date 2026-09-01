@@ -1,0 +1,43 @@
+# castle.example.yaml — Castle CLI configuration reference
+#
+# Copy this file to castle.yaml (project root) or $HOME/.castle.yaml.
+# Any key can also be overridden with an environment variable:
+#   CASTLE_<KEY>   e.g. CASTLE_PORT=9090
+#   Nested keys use underscores: CASTLE_DEFECTDOJO_API_KEY=xxx
+#
+# Values shown here are the built-in defaults.
+
+# ---------------------------------------------------------------------------
+# Runtime environment
+# Typical values: development | staging | production
+# ---------------------------------------------------------------------------
+environment: development
+
+# ---------------------------------------------------------------------------
+# Local API server port (used by castle serve, if applicable)
+# ---------------------------------------------------------------------------
+port: 8080
+
+# ---------------------------------------------------------------------------
+# DefectDojo integration
+# ---------------------------------------------------------------------------
+defectdojo:
+  # Base URL of your DefectDojo instance (no trailing slash).
+  url: https://defectdojo.example.com
+
+  # API v2 key — generate it under Profile → API v2 key in DefectDojo.
+  # Prefer setting CASTLE_DEFECTDOJO_API_KEY in the environment instead of
+  # storing the secret in this file.
+  api_key: ""
+
+# ---------------------------------------------------------------------------
+# Kubernetes
+# ---------------------------------------------------------------------------
+kubernetes:
+  # Target namespace for deployments and queries.
+  namespace: default
+
+  # Absolute path to a kubeconfig file.
+  # Leave empty to use the in-cluster service-account config or the default
+  # kubeconfig at $HOME/.kube/config.
+  kubeconfig: ""
