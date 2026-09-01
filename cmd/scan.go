@@ -10,36 +10,51 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	scanTarget       string
-	scanType         string
-	scanUpload       bool
-	scanEngagementID int
-)
+// newScanCmd builds a fresh "castle scan" command.
+func newScanCmd() *cobra.Command {
+	var (
+		scanTarget       string
+		scanType         string
+		scanUpload       bool
+		scanEngagementID int
+	)
 
-var scanCmd = &cobra.Command{
-	Use:   "scan",
-	Short: "Run a security scan and optionally upload results to DefectDojo",
-	Long: `castle scan invokes a security scanner (trivy or semgrep) against the
+	cmd := &cobra.Command{
+		Use:   "scan",
+		Short: "Run a security scan and optionally upload results to DefectDojo",
+		Long: `castle scan invokes a security scanner (trivy or semgrep) against the
 specified target and writes findings to a temporary JSON file.
 
 When --upload is set the report is forwarded to the DefectDojo instance
 configured in castle.yaml (defectdojo.url / defectdojo.api_key) or via the
 CASTLE_DEFECTDOJO_URL / CASTLE_DEFECTDOJO_API_KEY environment variables.`,
-	SilenceUsage: true,
-	RunE:         runScan,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runScan(cmd, scanType, scanTarget, scanUpload, scanEngagementID)
+		},
+	}
+
+	cmd.Flags().StringVar(&scanTarget, "target", ".",
+		"path or container image to scan (default: current directory)")
+	cmd.Flags().StringVar(&scanType, "type", "trivy",
+		"scanner to use: trivy or semgrep")
+	cmd.Flags().BoolVar(&scanUpload, "upload", false,
+		"upload scan results to DefectDojo after the scan completes")
+	cmd.Flags().IntVar(&scanEngagementID, "engagement-id", 1,
+		"DefectDojo engagement ID to import findings into (required when --upload is set)")
+
+	return cmd
 }
 
-func runScan(cmd *cobra.Command, _ []string) error {
+// runScan contains the business logic for "castle scan".
+func runScan(cmd *cobra.Command, scanType, scanTarget string, scanUpload bool, scanEngagementID int) error {
 	ctx := context.Background()
 
-	// --- 1. Resolve scanner implementation ---
 	scanner, err := security.NewScanner(scanType)
 	if err != nil {
 		return fmt.Errorf("scan: %w", err)
 	}
 
-	// --- 2. Execute the scan ---
 	slog.Info("scan: starting", "type", scanType, "target", scanTarget)
 
 	reportPath, err := scanner.Scan(ctx, scanTarget)
@@ -47,7 +62,6 @@ func runScan(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("scan: running %s scanner: %w", scanType, err)
 	}
 
-	// Always remove the temporary report once we are done with it.
 	defer func() {
 		if rmErr := os.Remove(reportPath); rmErr != nil && !os.IsNotExist(rmErr) {
 			slog.Warn("scan: could not remove temporary report",
@@ -58,7 +72,6 @@ func runScan(cmd *cobra.Command, _ []string) error {
 	slog.Info("scan: finished", "report", reportPath)
 	fmt.Fprintf(cmd.OutOrStdout(), "Scan complete. Report written to: %s\n", reportPath)
 
-	// --- 3. Upload to DefectDojo (only when --upload is set) ---
 	if !scanUpload {
 		return nil
 	}
@@ -88,8 +101,7 @@ func runScan(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-// defectDojoScanType maps the CLI --type flag value to the DefectDojo
-// scan_type string expected by /api/v2/import-scan/.
+// defectDojoScanType maps the CLI --type flag value to the DefectDojo scan_type string.
 func defectDojoScanType(t string) string {
 	switch t {
 	case "trivy":
@@ -99,25 +111,4 @@ func defectDojoScanType(t string) string {
 	default:
 		return t
 	}
-}
-
-func init() {
-	scanCmd.Flags().StringVar(
-		&scanTarget, "target", ".",
-		"path or container image to scan (default: current directory)",
-	)
-	scanCmd.Flags().StringVar(
-		&scanType, "type", "trivy",
-		"scanner to use: trivy or semgrep",
-	)
-	scanCmd.Flags().BoolVar(
-		&scanUpload, "upload", false,
-		"upload scan results to DefectDojo after the scan completes",
-	)
-	scanCmd.Flags().IntVar(
-		&scanEngagementID, "engagement-id", 1,
-		"DefectDojo engagement ID to import findings into (required when --upload is set)",
-	)
-
-	rootCmd.AddCommand(scanCmd)
 }
