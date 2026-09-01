@@ -1,0 +1,1 @@
+Welcome to the Castle platform engineering CLI!

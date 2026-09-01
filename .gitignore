@@ -1,0 +1,30 @@
+# Binarios compilados
+/bin/
+castle-cli
+*.exe
+*.exe;
+*.dll
+*.so
+*.dylib
+
+# Ficheros de configuración local y secretos
+*.env
+castle.yaml
+!castle.example.yaml
+
+# Modulos de Go y dependencias vendored
+vendor/
+
+# Entorno de desarrollo / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Cobertura de tests
+*.out
+*.html
+
+# Contexto local de desarrollo
+CLAUDE.md
